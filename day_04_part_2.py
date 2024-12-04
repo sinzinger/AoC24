@@ -26,6 +26,8 @@ In this example, an X-MAS appears 9 times.
 Flip the word search from the instructions back over to the word search side and try again. How many times does an X-MAS appear?
 """
 
+import time
+
 def count_x_mas(grid):
     rows, cols = len(grid), len(grid[0])
     count = 0
@@ -51,16 +53,23 @@ def count_x_mas(grid):
 
     return count
 
+def solve_by_single_process():
+    file_path = "day_04_input.txt"
+    with open(file_path, 'r') as file:
+        word_search = file.read().splitlines()
 
-# Read the input file
-file_path = "day_04_input.txt"  # Ensure the file exists in this path
-with open(file_path, 'r') as file:
-    word_search = file.read().splitlines()
+    # Convert the input to a grid of characters
+    grid = [list(row) for row in word_search]
 
-# Convert the input to a grid of characters
-grid = [list(row) for row in word_search]
+    # Count X-MAS patterns
+    return count_x_mas(grid)
 
-# Count X-MAS patterns
-result = count_x_mas(grid)
+def benchmark(func):
+    start_time = time.time()
+    result = func()
+    end_time = time.time()
+    return result, end_time - start_time
 
-print(f"The X-MAS pattern appears {result} times.")
+if __name__ == "__main__":
+    result, benchmarked_time = benchmark(solve_by_single_process)
+    print(f"Result = {result}, Time = {benchmarked_time:.4f} seconds")
