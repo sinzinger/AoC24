@@ -33,6 +33,14 @@ def is_equation_solvable(target, numbers):
     """Check if any operator combination makes the equation true."""
     operators = ["+", "*", "||"]
 
+    def num_digits(n):
+        """Return the number of digits in a positive integer."""
+        digits = 0
+        while n > 0:
+            n //= 10
+            digits += 1
+        return digits
+
     # Generate and evaluate combinations directly
     operator_combinations = itertools.product(operators, repeat=len(numbers) - 1)
     for combination in operator_combinations:
@@ -43,8 +51,10 @@ def is_equation_solvable(target, numbers):
             elif operator == "*":
                 result *= numbers[i + 1]
             elif operator == "||":
-                result = int(str(result) + str(numbers[i + 1]))
-
+                # Let's get rid of string type conversion! 🚀
+                # result = int(str(result) + str(numbers[i + 1]))
+                result = result * (10 ** num_digits(numbers[i + 1])) + numbers[i + 1]
+                
             # Prune combinations that exceed the target
             # Interesting: now with parallel processing pruning is efficient. From 1.3 to 1.2 seconds 🚀
             if result > target:
