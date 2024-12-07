@@ -29,46 +29,36 @@ def parse_input(file_path):
             equations.append((target, numbers))
     return equations
 
-def evaluate_expression(numbers, operators):
-    """Evaluate the expression left-to-right with the given operators."""
-    #Interesting: Memoized evaluation of the expression resulted in an increase of the execution time from 8 to 20 seconds. 🧐
-    #Interesting: Memoizing only the concatenation operation resulted in an increaes from 8.6 to 8.7 seconds 🧐
-    result = numbers[0]  # Start with the first number
-    for i in range(len(operators)):
-        if operators[i] == "+":
-            result += numbers[i + 1]  # Add the next number
-        elif operators[i] == "*":
-            result *= numbers[i + 1]  # Multiply with the next number
-        elif operators[i] == "||":
-            # Concatenate the next number as a string, then convert back to int
-            result = int(str(result) + str(numbers[i + 1]))
-
-        # Interesting: pruning resulted in an increase in execution time, 
-        # it was better when applied before expensive multiplication operation
-        # but still no pruning is more efficient. 🧐
-        # Prune if result exceeds target before expensive multiplication operation
-        #    if result > target:
-        #        return False  # No need to evaluate further
-
-    return result
-
-
 def is_equation_solvable(target, numbers):
     """Check if any operator combination makes the equation true."""
-    # Define operators as a list to treat "||" as a single operator
     operators = ["+", "*", "||"]
-    # Generate all possible combinations of these operators
-    operator_combinations = itertools.product(operators, repeat=len(numbers) - 1)
 
-    for operators in operator_combinations:
-        if evaluate_expression(numbers, operators) == target:
+    # Generate and evaluate combinations directly
+    operator_combinations = itertools.product(operators, repeat=len(numbers) - 1)
+    for combination in operator_combinations:
+        result = numbers[0]
+        for i, operator in enumerate(combination):
+            if operator == "+":
+                result += numbers[i + 1]
+            elif operator == "*":
+                result *= numbers[i + 1]
+            elif operator == "||":
+                result = int(str(result) + str(numbers[i + 1]))
+
+            # Prune combinations that exceed the target
+            # Interesting: now with parallel processing pruning is efficient. From 1.3 to 1.2 seconds 🚀
+            if result > target:
+                break
+
+        if result == target:
             return True
+
     return False
 
 def calculate_single_equation(equation):
     """Evaluate whether a single equation can be solved."""
     target, numbers = equation
-    return target if is_equation_solvable(target, numbers) else 0
+    return target if is_equation_solvable(target, numbers) else 0   
 
 def calculate_total_calibration(equations):
 
