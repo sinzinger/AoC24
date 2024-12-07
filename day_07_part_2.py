@@ -16,7 +16,7 @@ Using your new knowledge of elephant hiding spots, determine which equations cou
 
 import itertools
 import time
-from functools import lru_cache
+from concurrent.futures import ProcessPoolExecutor
 
 def parse_input(file_path):
     """Parse the input file into target values and number sequences."""
@@ -57,7 +57,6 @@ def is_equation_solvable(target, numbers):
     """Check if any operator combination makes the equation true."""
     # Define operators as a list to treat "||" as a single operator
     operators = ["+", "*", "||"]
-
     # Generate all possible combinations of these operators
     operator_combinations = itertools.product(operators, repeat=len(numbers) - 1)
 
@@ -66,15 +65,18 @@ def is_equation_solvable(target, numbers):
             return True
     return False
 
+def calculate_single_equation(equation):
+    """Evaluate whether a single equation can be solved."""
+    target, numbers = equation
+    return target if is_equation_solvable(target, numbers) else 0
 
 def calculate_total_calibration(equations):
-    """Calculate the total calibration result."""
-    total = 0
-    for target, numbers in equations:
-        if is_equation_solvable(target, numbers):
-            total += target
-    return total
 
+    """Calculate the total calibration result using parallel processing."""
+    # This decreased execution time from 8.6 to 1.3 seconds. 🚀
+    with ProcessPoolExecutor() as executor:
+        results = executor.map(calculate_single_equation, equations)
+    return sum(results)
 
 if __name__ == "__main__":
     # Start timing
@@ -93,16 +95,3 @@ if __name__ == "__main__":
     # End timing
     end_time = time.time()
     print(f"Execution Time: {end_time - start_time:.4f} seconds")
-
-
-"""
-3. Parallelization
-	•	Use concurrent.futures to evaluate different operator combinations concurrently.
-
-4. Reduce Operator Combinations
-	•	Remove operator combinations early that are unlikely to lead to the target value.
-	•	Example: If concatenation (||) leads to a very large number compared to the target, skip it.
-
-5. Precompute Concatenations
-	•	Precompute all possible results of concatenation for the sequence of numbers. Use this to reduce the dynamic calculation of ||.
-"""
