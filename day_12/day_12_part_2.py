@@ -66,25 +66,28 @@ def find_regions(grid):
     """Identify all unique regions in the grid using flood-fill."""
     visited = np.zeros_like(grid, dtype=bool)
     regions = defaultdict(list)
+    region_id_counter = 0  # Unique ID for each region
     
-    def flood_fill(y, x, region_type):
+    def flood_fill(y, x, region_id):
         stack = [(y, x)]
         while stack:
             cy, cx = stack.pop()
             if visited[cy, cx]:
                 continue
             visited[cy, cx] = True
-            regions[region_type].append((cy, cx))
+            regions[region_id].append((cy, cx))
             for ny, nx in [(cy-1, cx), (cy+1, cx), (cy, cx-1), (cy, cx+1)]:
                 if 0 <= ny < grid.shape[0] and 0 <= nx < grid.shape[1]:
-                    if not visited[ny, nx] and grid[ny, nx] == region_type:
+                    if not visited[ny, nx] and grid[ny, nx] == grid[y, x]:
                         stack.append((ny, nx))
     
     for y in range(grid.shape[0]):
         for x in range(grid.shape[1]):
             if not visited[y, x]:
                 region_type = grid[y, x]
-                flood_fill(y, x, region_type)
+                region_id = f"{region_type}_{region_id_counter}"  # Unique ID for this region
+                region_id_counter += 1
+                flood_fill(y, x, region_id)
     
     return regions
 
@@ -95,7 +98,6 @@ def count_sides(region_type, region_coords):
         return tuple(a + b for a, b in zip(tuple_a, tuple_b))
 
     sides = 0
-    print (f"{region_type} - {region_coords}")
     up = (-1, 0)
     down = (1, 0)
     left = (0, -1)
@@ -108,35 +110,25 @@ def count_sides(region_type, region_coords):
     for pos in region_coords:
         if nav(pos,left) not in region_coords and nav(pos,up) not in region_coords:
             sides += 1
-            print (f"added an up left side for {pos} in {region_type}")
         if nav(pos,right) not in region_coords and nav(pos,up) not in region_coords:
             sides += 1
-            print (f"added an up right side for {pos} in {region_type}")
         if nav(pos,right) not in region_coords and nav(pos,down) not in region_coords:
             sides += 1
-            print (f"added a down right side for {pos} in {region_type}")
         if nav(pos,left) not in region_coords and nav(pos,down) not in region_coords:
             sides += 1
-            print (f"added a down left side for {pos} in {region_type}")
         # inner edges
         if nav(pos,left) in region_coords and nav(pos, up) in region_coords:
             if nav(pos, upleft) not in region_coords:
                 sides += 1
-                print (f"added an inner edge for {pos} in {region_type}")
         if nav(pos,right) in region_coords and nav(pos, up) in region_coords:
             if nav(pos, upright) not in region_coords:
                 sides += 1
-                print (f"added an inner edge for {pos} in {region_type}")
         if nav(pos,left) in region_coords and nav(pos, down) in region_coords:
             if nav(pos, downleft) not in region_coords:
                 sides += 1
-                print (f"added an inner edge for {pos} in {region_type}")
         if nav(pos,right) in region_coords and nav(pos, down) in region_coords:
             if nav(pos, downright) not in region_coords:
                 sides += 1
-                print (f"added an inner edge for {pos} in {region_type}")
-            
-        
     return sides
 
 def calculate_total_price(grid):
@@ -149,12 +141,12 @@ def calculate_total_price(grid):
         area = len(region_coords)
         price = area * sides
         total_price += price
-        print(f"Region '{region_type}' - Area: {area}, Sides: {sides}, Price: {price}")
+        # print(f"Region '{region_type}' - Area: {area}, Sides: {sides}, Price: {price}")
 
     return total_price
 
 def main():
-    grid = parse_grid("./day_12/day_12_input_web.txt")
+    grid = parse_grid("./day_12/day_12_input.txt")
     total_price = calculate_total_price(grid)
     print(f"Total Price: {total_price}")
 
