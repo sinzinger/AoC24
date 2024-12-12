@@ -93,42 +93,56 @@ def find_regions(grid):
 
 def count_sides(region_type, region_coords):
     """Count the number of unique sides in the fence grid."""
-
-    def nav (tuple_a, tuple_b):
-        return tuple(a + b for a, b in zip(tuple_a, tuple_b))
-
+    def offset_position(pos, offset):
+        """Calculate a new position by applying an offset."""
+        return tuple(a + b for a, b in zip(pos, offset))
+    
+    directions = {
+        "up": (-1, 0),
+        "down": (1, 0),
+        "left": (0, -1),
+        "right": (0, 1),
+        "upleft": (-1, -1),
+        "upright": (-1, 1),
+        "downleft": (1, -1),
+        "downright": (1, 1),
+    }
+    
     sides = 0
-    up = (-1, 0)
-    down = (1, 0)
-    left = (0, -1)
-    right = (0, 1)
-    upleft = nav(up, left)
-    upright = nav(up, right)
-    downleft = nav(down, left)
-    downright = nav(down, right)
-
+    
     for pos in region_coords:
-        if nav(pos,left) not in region_coords and nav(pos,up) not in region_coords:
+        # Check outer edges
+        if offset_position(pos, directions["left"]) not in region_coords and \
+           offset_position(pos, directions["up"]) not in region_coords:
             sides += 1
-        if nav(pos,right) not in region_coords and nav(pos,up) not in region_coords:
+        if offset_position(pos, directions["right"]) not in region_coords and \
+           offset_position(pos, directions["up"]) not in region_coords:
             sides += 1
-        if nav(pos,right) not in region_coords and nav(pos,down) not in region_coords:
+        if offset_position(pos, directions["right"]) not in region_coords and \
+           offset_position(pos, directions["down"]) not in region_coords:
             sides += 1
-        if nav(pos,left) not in region_coords and nav(pos,down) not in region_coords:
+        if offset_position(pos, directions["left"]) not in region_coords and \
+           offset_position(pos, directions["down"]) not in region_coords:
             sides += 1
-        # inner edges
-        if nav(pos,left) in region_coords and nav(pos, up) in region_coords:
-            if nav(pos, upleft) not in region_coords:
-                sides += 1
-        if nav(pos,right) in region_coords and nav(pos, up) in region_coords:
-            if nav(pos, upright) not in region_coords:
-                sides += 1
-        if nav(pos,left) in region_coords and nav(pos, down) in region_coords:
-            if nav(pos, downleft) not in region_coords:
-                sides += 1
-        if nav(pos,right) in region_coords and nav(pos, down) in region_coords:
-            if nav(pos, downright) not in region_coords:
-                sides += 1
+        
+        # Check inner edges
+        if offset_position(pos, directions["left"]) in region_coords and \
+           offset_position(pos, directions["up"]) in region_coords and \
+           offset_position(pos, directions["upleft"]) not in region_coords:
+            sides += 1
+        if offset_position(pos, directions["right"]) in region_coords and \
+           offset_position(pos, directions["up"]) in region_coords and \
+           offset_position(pos, directions["upright"]) not in region_coords:
+            sides += 1
+        if offset_position(pos, directions["left"]) in region_coords and \
+           offset_position(pos, directions["down"]) in region_coords and \
+           offset_position(pos, directions["downleft"]) not in region_coords:
+            sides += 1
+        if offset_position(pos, directions["right"]) in region_coords and \
+           offset_position(pos, directions["down"]) in region_coords and \
+           offset_position(pos, directions["downright"]) not in region_coords:
+            sides += 1
+    
     return sides
 
 def calculate_total_price(grid):
