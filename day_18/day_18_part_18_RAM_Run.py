@@ -64,55 +64,100 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
-grid_size = 71
-file_path = "./day_18/day_18_input.txt"
 
-# Read the file but parse the first 1024 lines only
-corrupted_coordinates = []
-with open(file_path, "r") as f:
-    for line in f:
-        x, y = map(int, line.strip().split(","))
-        corrupted_coordinates.append((x, y))
-        if len(corrupted_coordinates) == 1024:
-            break
+def read_corrupted_coordinates(file_path, limit):
+    """
+    Reads until the `limit` of corrupted coordinates from a file.
 
-G = nx.grid_2d_graph(grid_size, grid_size)
+    Args:
+        file_path (str): Path to the input file.
+        limit (int): Maximum number of coordinates to read.
 
-# Remove nodes that correspond to obstacles / corrupted coordinates
-for coord in corrupted_coordinates:
-    if coord in G:
-        G.remove_node(coord)
+    Returns:
+        list of tuple: List of corrupted coordinates as (x, y) tuples.
+    """
+    corrupted_coordinates = []
+    with open(file_path, "r") as file:
+        for line in file:
+            x, y = map(int, line.strip().split(","))
+            corrupted_coordinates.append((x, y))
+            if len(corrupted_coordinates) == limit:
+                break
+    return corrupted_coordinates
 
-# Visualize the grid with obstacles
+
+def create_grid_with_obstacles(grid_size, corrupted_coordinates):
+    """
+    Creates a NetworkX grid graph and removes nodes corresponding to obstacles.
+
+    Args:
+        grid_size (int): Size of the grid (grid_size x grid_size).
+        corrupted_coordinates (list of tuple): List of corrupted coordinates.
+
+    Returns:
+        nx.Graph: Grid graph with obstacles (corrupted coordinates) removed.
+    """
+    grid_graph = nx.grid_2d_graph(grid_size, grid_size)
+    for coord in corrupted_coordinates:
+        if coord in grid_graph:
+            grid_graph.remove_node(coord)
+    return grid_graph
+
+
 def visualize_grid(grid_size, corrupted_coordinates):
-    # Create a grid representation
+    """
+    Visualizes the grid with obstacles using matplotlib.
+
+    Args:
+        grid_size (int): Size of the grid (grid_size x grid_size).
+        corrupted_coordinates (list of tuple): List of corrupted coordinates.
+    """
     grid_visual = np.full((grid_size, grid_size), ".", dtype=str)
     for coord in corrupted_coordinates:
         grid_visual[coord[1], coord[0]] = "#"  # Flip coordinates for display
 
-    # Plot the grid
-    plt.figure(figsize=(6, 6))
+    plt.figure(figsize=(8, 8))
     plt.imshow(grid_visual == "#", cmap="Greys", interpolation="none")
     for (j, i), label in np.ndenumerate(grid_visual):
-        plt.text(i, j, label, ha='center', va='center', color="blue" if label == "." else "red")
+        plt.text(i, j, label, ha="center", va="center", color="blue" if label == "." else "red")
     plt.title("Grid with Obstacles (Corrupted Bytes)")
-    plt.axis('off')
+    plt.axis("off")
     plt.show()
 
-visualize_grid(grid_size, corrupted_coordinates)
+
+def find_shortest_path(graph, start, end):
+    """
+    Finds the shortest path in a grid graph using A*.
+
+    Args:
+        graph (nx.Graph): NetworkX grid graph.
+        start (tuple): Starting coordinate (x, y).
+        end (tuple): Ending coordinate (x, y).
+
+    Returns:
+        tuple: The number of steps of the shortest path.
+    """
+    try:
+        shortest_path = nx.astar_path(graph, source=start, target=end)
+        return len(shortest_path) - 1
+    except nx.NetworkXNoPath:
+        return None, float("inf")
 
 
-start = (0, 0) 
-end = (grid_size - 1, grid_size - 1)
+def main():
+    grid_size = 71
+    file_path = "./day_18/day_18_input.txt"
+    num_obstacles = 1024
 
-# Use NetworkX to find the shortest path
-try:
-    shortest_path = nx.astar_path(G, source=start, target=end)
-    shortest_path_length = len(shortest_path) - 1  # Number of steps to reach the goal
-except nx.NetworkXNoPath:
-    shortest_path = None
-    shortest_path_length = float('inf')  # No path exists
+    corrupted_coordinates = read_corrupted_coordinates(file_path, num_obstacles)
+    graph = create_grid_with_obstacles(grid_size, corrupted_coordinates)
+    visualize_grid(grid_size, corrupted_coordinates)
+    
+    start = (0, 0)  # Top-left corner
+    end = (grid_size - 1, grid_size - 1)  # Bottom-right corner
+    path_length = find_shortest_path(graph, start, end)
 
-# Output the result
-print(f"Shortest Path: {shortest_path}")
-print(f"Number of steps: {shortest_path_length}")
+    print(f"Number of steps: {path_length}")
+
+if __name__ == "__main__":
+    main()
